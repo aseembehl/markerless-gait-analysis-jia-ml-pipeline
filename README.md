@@ -21,4 +21,4 @@ The pipeline consists of the following stages:
 
 ## Repository Purpose
 
-This repository is intended to host the code used to implement the machine learning pipeline described in the paper, including preprocessing, landmark detection, joint angle computation, and gait trajectory analysis.
+This repository is intended to host the code used to implement the machine learning pipeline described in the paper, including preprocessing, landmark detection, joint angle computation, and gait computation.
