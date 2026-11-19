@@ -73,6 +73,7 @@ class EventConfig:
     smooth_window: int = 5
     min_run: int = 4
     outlier_sd: float = 2.0
+    edge_min_run: int = 2
 
 
 @dataclass

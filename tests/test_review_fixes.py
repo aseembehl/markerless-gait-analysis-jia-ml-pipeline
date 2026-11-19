@@ -7,6 +7,7 @@ from jia_gait import cli, pipeline
 from jia_gait.config import PipelineConfig
 from jia_gait.gait import EventDetector, ModelSettings
 from jia_gait.gait.cycles import cycle_bounds, filter_bounds
+from jia_gait.gait.events import PostprocessConfig
 from jia_gait.io.csv_formats import (
     GaitEvents,
     frames_to_rows,
@@ -38,9 +39,15 @@ def _seq(ids):
 def test_no_event_invented_from_runs_on_both_sides_of_a_gap():
     seq = _seq(np.r_[np.arange(0, 50), np.arange(200, 250)])
     # last 3 rows of pass 0 and first 3 rows of pass 1: neither is a run of 4 on its own
-    det = EventDetector(_RowModel([47, 48, 49, 50, 51, 52]), ModelSettings(model_fps=50))
-    ev = det.detect(np.zeros((len(seq), 6)), seq, fps=50)
+    hits = [47, 48, 49, 50, 51, 52]
+    notebook = ModelSettings(model_fps=50, postprocess=PostprocessConfig(edge_min_run=0))
+    ev = EventDetector(_RowModel(hits), notebook).detect(np.zeros((len(seq), 6)), seq, fps=50)
     assert len(ev.heel_on_ltr) == 0
+    # the edge rule treats them as two cut-off runs, one strike per pass, none in the gap
+    ev = EventDetector(_RowModel(hits), ModelSettings(model_fps=50)).detect(
+        np.zeros((len(seq), 6)), seq, fps=50
+    )
+    assert set(seq.segment[ev.heel_on_ltr]) == {0, 1} and len(ev.heel_on_ltr) == 2
 
 
 def test_outlier_check_does_not_measure_intervals_across_a_gap():

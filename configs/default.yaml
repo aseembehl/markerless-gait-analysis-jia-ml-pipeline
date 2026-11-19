@@ -45,6 +45,8 @@ events:
   smooth_window: 5
   min_run: 4
   outlier_sd: 2.0
+  edge_min_run: 2             # heel strikes cut off by the start/end of a pass (0 = off;
+                              # not in the original notebook)
 
 # Cycle normalisation.
 cycles:

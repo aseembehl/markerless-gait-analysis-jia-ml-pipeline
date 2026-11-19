@@ -9,7 +9,9 @@ six joint angles (``JointAngles.features()``) into
 
 and the per-frame predictions are turned into discrete events by
 majority smoothing, taking the midpoint of each run, and discarding events
-whose spacing is far from the median cycle length.
+whose spacing is far from the median cycle length. Heel strikes cut off by
+the start or end of a walking pass are recovered separately (``edge_min_run``,
+not in the original notebook).
 
 Toe-off events are not predicted (only expert-labelled toe-offs exist).
 
@@ -38,6 +40,10 @@ class PostprocessConfig:
     smooth_window: int = 5
     min_run: int = 4
     outlier_sd: float = 2.0
+    # Heel strikes at the very start or end of a walking pass (tracking starts or
+    # stops mid-run): accept a cut-off run of at least this many frames above the
+    # threshold. 0 disables (original notebook behaviour).
+    edge_min_run: int = 2
 
 
 def _mode_smooth(y: np.ndarray, window: int) -> np.ndarray:
@@ -70,6 +76,47 @@ def _run_midpoints(y: np.ndarray, cls: int, min_run: int) -> list[int]:
     return mids
 
 
+def _runs(mask: np.ndarray) -> list[tuple[int, int]]:
+    """``(start, end)`` of the True runs of ``mask``, end exclusive."""
+    d = np.diff(np.r_[0, mask.astype(int), 0])
+    return list(zip(np.flatnonzero(d == 1).tolist(), np.flatnonzero(d == -1).tolist()))
+
+
+def _edge_events(
+    proba: np.ndarray, passes: list[np.ndarray], peaks: np.ndarray, cfg: PostprocessConfig
+) -> None:
+    """Add heel strikes whose run of frames is cut off by a pass edge (in place).
+
+    The normal rule needs a complete run of at least ``min_run`` frames, so a
+    strike on the first or last frames of a pass - where the child walks into
+    or out of the walking area - is lost, and with it a whole gait cycle. Here
+    a run of frames with probability > ``threshold`` that touches a pass edge
+    and is at least ``edge_min_run`` long gives a strike half a typical run
+    (median complete run of that class in the recording) in from its cut-off
+    end, clamped to the pass. Skipped if the normal rule already found a
+    strike of that class within one typical run.
+    """
+    for cls in (HEEL_ON_LTR, HEEL_ON_RTL):
+        complete = [
+            e - s
+            for rows in passes
+            for s, e in _runs(proba[rows, cls] > cfg.threshold)
+            if s > 0 and e < len(rows) and e - s >= cfg.min_run
+        ]
+        typical = float(np.median(complete)) if complete else 2.0 * cfg.min_run
+        for rows in passes:
+            n = len(rows)
+            for s, e in _runs(proba[rows, cls] > cfg.threshold):
+                if e - s < cfg.edge_min_run or (s > 0 and e < n) or (s == 0 and e == n):
+                    continue
+                pos = e - typical / 2 if s == 0 else s + typical / 2 - 1
+                pos = int(min(max(round(pos), 0), n - 1))
+                lo, hi = max(0, pos - int(typical)), pos + int(typical) + 1
+                if (peaks[rows[lo:hi]] == cls).any():
+                    continue
+                peaks[rows[pos]] = cls
+
+
 def _paired_intervals(peaks: np.ndarray, cls: int) -> list[tuple[int, int]]:
     """Intervals between same-class events, exactly as the original loop.
 
@@ -100,7 +147,8 @@ def postprocess(
     With ``segment`` (walking-pass id per row), smoothing, run detection and the
     interval-based outlier check never cross a pass boundary; the median
     interval is still taken over the whole recording. Without it (one pass),
-    the result is identical to the original notebook.
+    the result is identical to the original notebook if ``cfg.edge_min_run``
+    is 0.
 
     Note (original behaviour, kept for reproducibility): a frame where no class
     exceeds ``threshold`` becomes class 0 (heel-on L->R) before smoothing,
@@ -117,6 +165,8 @@ def postprocess(
         smooth = _mode_smooth(hard, cfg.smooth_window)
         for cls in (HEEL_ON_LTR, HEEL_ON_RTL):
             peaks[rows[_run_midpoints(smooth, cls, cfg.min_run)]] = cls
+    if cfg.edge_min_run > 0:
+        _edge_events(proba, passes, peaks, cfg)
 
     pairs: dict[int, list[tuple[int, int]]] = {HEEL_ON_LTR: [], HEEL_ON_RTL: []}
     for rows in passes:

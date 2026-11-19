@@ -42,7 +42,8 @@ later stages work on the kept frames only.
 - Left-to-right ankle angle: the ankle point is shifted 1 px down
   (`ankleVertical = ankle = ...` in the original); negligible effect.
 - Event post-processing: a frame where no class probability exceeds 0.5 is
-  treated as a left-to-right heel-on before smoothing.
+  treated as a left-to-right heel-on before smoothing (the pass-edge rule
+  below uses the probabilities directly, so it is not affected).
 - Event outlier removal only checks every other inter-event interval.
 - In the original notebooks the heel-on model was trained on angles from the
   TCFormer variant (2023 labelled sets) and applied to ViTPose-derived angles.
@@ -83,6 +84,15 @@ code, in favour of correct timing):
   unchanged (ankle at most -1.2 deg; a 10 deg threshold clipped sharp ankle
   peaks after toe-off). Replaced samples are listed in `cycles.npz`
   (`despiked`). The heel-on model is trained on filtered angles.
+- **Heel strikes at pass edges.** The notebook post-processing needs a
+  complete run of at least 4 heel-on frames, so a heel strike on the last
+  frames of a walking pass - typically as the child walks out of the walking
+  area - was lost, and with it a whole gait cycle. A cut-off run of at least
+  2 frames now gives a heel strike half a typical run in from where it was cut
+  (config `events.edge_min_run`, 0 = off). In leave-one-recording-out
+  cross-validation on 33 recordings it found 16 of 17 strikes within 4 frames
+  of a pass edge (notebook rule: 9), with no false positives and unchanged
+  timing; on 90 cohort recordings it added 44 gait cycles (866 -> 908).
 
 Smaller differences:
 

@@ -92,7 +92,9 @@ def event_detector_from_config(cfg: PipelineConfig) -> EventDetector:
         raise ValueError("No heel-on event model configured (events.model)")
     fallback = ModelSettings(
         model_fps=e.model_fps,
-        postprocess=PostprocessConfig(e.threshold, e.smooth_window, e.min_run, e.outlier_sd),
+        postprocess=PostprocessConfig(
+            e.threshold, e.smooth_window, e.min_run, e.outlier_sd, e.edge_min_run
+        ),
     )
     return EventDetector.load(e.model, fallback)
 
