@@ -36,6 +36,8 @@ def _finish(result, out_dir, name):
     paths = pipeline.write_outputs(result, out_dir, name=name)
     n_plots = sum(k.startswith("plot") for k in paths)
     print(_summary(result))
+    for w in (result.quality or {}).get("warnings", []):
+        print(f"WARNING: {w}", file=sys.stderr)
     if result.cycles.n_cycles == 0:
         n_hs = len(result.events.heel_on_ltr) + len(result.events.heel_on_rtl)
         print(

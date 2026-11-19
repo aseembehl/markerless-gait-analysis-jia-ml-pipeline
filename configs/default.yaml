@@ -28,6 +28,14 @@ sequence:
   max_gap_s: 0.1              # seconds
   default_fps: 50             # frame rate assumed for landmark CSV input without --fps
 
+# Joint angles: replace 1-2 frame landmark glitches by the running median
+# (not in the original notebooks; see kinematics/despike.py).
+angles:
+  despike: true
+  half_window_s: 0.06         # running-median half window (3 frames at 50 fps)
+  threshold_deg: 20           # deviation from the running median that counts as a spike ...
+  n_sigma: 3                  # ... if also above this many robust SDs
+
 # Heel-on detection: XGBoost frame classifier on the 6 joint angles.
 events:
   model: ../weights/heel_on_xgb.json  # relative to this file; its heel_on_xgb.meta.json

@@ -53,6 +53,16 @@ class SequenceConfig:
 
 
 @dataclass
+class AngleConfig:
+    """Spike removal on the joint-angle series (jia_gait.kinematics.despike)."""
+
+    despike: bool = True
+    half_window_s: float = 0.06  # running-median half window (3 frames at 50 fps)
+    threshold_deg: float = 20.0  # minimum deviation from the running median to count as a spike
+    n_sigma: float = 3.0  # ... and more than this many robust SDs
+
+
+@dataclass
 class EventConfig:
     # Path to a trained XGBoost model (.json). Its settings file <model>.meta.json
     # (feature set, frame rate, post-processing) takes precedence over the
@@ -83,6 +93,7 @@ class PipelineConfig:
     landmarks: LandmarkConfig = field(default_factory=LandmarkConfig)
     images: ImageConfig = field(default_factory=ImageConfig)
     sequence: SequenceConfig = field(default_factory=SequenceConfig)
+    angles: AngleConfig = field(default_factory=AngleConfig)
     events: EventConfig = field(default_factory=EventConfig)
     cycles: CycleSettings = field(default_factory=CycleSettings)
 

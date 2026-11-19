@@ -73,6 +73,16 @@ code, in favour of correct timing):
 - **Cycle checks.** Cycles spanning a long gap are dropped, as are cycles
   longer than `cycles.max_duration_ratio` (1.5) times the recording's median
   cycle - usually two strides merged because a heel strike was missed.
+- **Landmark glitches.** ViTPose occasionally misplaces a joint for one or two
+  frames, giving angle spikes of tens of degrees (sometimes impossible values
+  such as a -200 deg ankle) that distort the mean +- SD plots. A Hampel filter
+  replaces angle samples that differ from the 7-frame running median by more
+  than 20 deg and 3 robust SDs (`jia_gait/kinematics/despike.py`, config
+  `angles`). On 90 cohort recordings it repaired 17 of 19 cycles with
+  impossible angles, while the range of motion of glitch-free mean curves was
+  unchanged (ankle at most -1.2 deg; a 10 deg threshold clipped sharp ankle
+  peaks after toe-off). Replaced samples are listed in `cycles.npz`
+  (`despiked`). The heel-on model is trained on filtered angles.
 
 Smaller differences:
 
@@ -91,7 +101,8 @@ uv pip install -p .venv -e '.[dev,video,models]'
 # (path set by `events.model` in the config). This repo contains inference only;
 # the model is evaluated with numpy, so XGBoost itself is not installed.
 
-# Video -> output folder with landmarks.csv, angles.csv, cycles.npz and plots/
+# Video -> output folder with landmarks.csv, angles.csv, cycles.npz, plots/ and
+# quality.txt/.json (usable frames, walking passes, dropped cycles, warnings)
 jia-gait -c configs/default.yaml run video.mp4 -o outputs/K001
 jia-gait run video.mp4 -o outputs/K001 --model path/to/heel_on_xgb.json
 

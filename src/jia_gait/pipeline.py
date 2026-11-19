@@ -13,7 +13,7 @@ from .gait import CycleConfig, EventDetector, GaitCycles, PostprocessConfig, ext
 from .gait.events import ModelSettings
 from .io import video
 from .io.csv_formats import GaitEvents, frames_to_rows
-from .kinematics import JointAngles, compute_joint_angles
+from .kinematics import JointAngles, compute_joint_angles, despike_angles
 from .landmarks import LANDMARKS, LandmarkDetector, ViTPoseLandmarkDetector
 from .sequence import FrameSequence, fill_gaps, max_gap_frames
 
@@ -30,6 +30,8 @@ class PipelineResult:
     angles: JointAngles
     events: GaitEvents  # row indices into seq
     cycles: GaitCycles
+    despiked: np.ndarray | None = None  # (T, 6) angle samples replaced by the spike filter
+    quality: dict | None = None  # see jia_gait.quality
 
     @property
     def imgids(self) -> np.ndarray:
@@ -137,6 +139,12 @@ def analyse_landmarks(
     fps = float(fps or cfg.sequence.default_fps)
     seq = fill_gaps(imgids, landmarks, max_gap_frames(cfg.sequence.max_gap_s, fps))
     angles = compute_joint_angles(seq.landmarks)
+    despiked = None
+    if cfg.angles.despike:
+        a = cfg.angles
+        angles, despiked = despike_angles(
+            angles, seq.segment, fps, a.half_window_s, a.threshold_deg, a.n_sigma
+        )
     if event_frames is not None:
         events = frames_to_rows(event_frames, seq.imgids)
     else:
@@ -145,7 +153,7 @@ def analyse_landmarks(
     cycles = extract_gait_cycles(
         angles, events, cycle_config(cfg), imgids=seq.imgids, segment=seq.segment, fps=fps
     )
-    return PipelineResult(
+    result = PipelineResult(
         detected_imgids=imgids,
         detected_landmarks=np.asarray(landmarks),
         bboxes=np.full((len(imgids), 4), np.nan) if bboxes is None else bboxes,
@@ -154,7 +162,12 @@ def analyse_landmarks(
         angles=angles,
         events=events,
         cycles=cycles,
+        despiked=despiked,
     )
+    from . import quality
+
+    result.quality = quality.summarise(result, cycle_config(cfg))
+    return result
 
 
 def run(
@@ -180,7 +193,9 @@ def write_outputs(result: PipelineResult, out_dir: str | Path, name: str = "") -
 
     landmarks.csv   detected landmarks (point_predictions format; dropped frames absent)
     angles.csv      angles on the gap-filled sequence + heel-on events (angle_preds format)
-    cycles.npz      normalised cycles per direction and joint (+ events, bboxes)
+    cycles.npz      normalised cycles per direction and joint (+ events, bboxes,
+                    and the mask of angle samples replaced by the spike filter)
+    quality.json / quality.txt    usable frames, passes, dropped cycles, warnings
     plots/<joint>_<ltr|rtl>.png   mean +- SD gait-cycle plots
     """
     from .io.csv_formats import write_angle_csv, write_point_predictions
@@ -207,6 +222,8 @@ def write_outputs(result: PipelineResult, out_dir: str | Path, name: str = "") -
         "heel_on_rtl": result.events.heel_on_rtl,
         "cycle_grid": result.cycles.grid,
     }
+    if result.despiked is not None:
+        arrays["despiked"] = result.despiked
     for d in ("ltr", "rtl"):
         dc = result.cycles[d]
         arrays[f"{d}_bounds"] = dc.bounds
@@ -214,6 +231,11 @@ def write_outputs(result: PipelineResult, out_dir: str | Path, name: str = "") -
         for joint, Y in dc.angles.items():
             arrays[f"{d}_{joint}"] = Y
     np.savez(paths["cycles"], **arrays)
+
+    if result.quality is not None:
+        from . import quality
+
+        paths["quality_json"], paths["quality_txt"] = quality.write(result.quality, out, name)
 
     for i, png in enumerate(save_cycle_plots(result.cycles, out / "plots", name=name)):
         paths[f"plot{i}"] = png
