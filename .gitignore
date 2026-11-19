@@ -7,10 +7,13 @@ __pycache__/
 build/
 dist/
 
-# Patient videos, model weights and outputs must never be committed.
+# Patient videos, model weights and outputs must never be committed -
+# except the released heel-strike model (no patient data or recording IDs).
 data/*
 !data/README.md
-weights/
+weights/*
+!weights/heel_on_xgb.json
+!weights/heel_on_xgb.meta.json
 outputs/
 *.mp4
 *.avi

@@ -1,0 +1,36 @@
+{
+  "format": 1,
+  "feature_set": "context",
+  "context_offsets": null,
+  "model_fps": 50.0,
+  "postprocess": {
+    "threshold": 0.5,
+    "smooth_window": 5,
+    "min_run": 4,
+    "outlier_sd": 2.0,
+    "edge_min_run": 2
+  },
+  "info": {
+    "trained": "2026-11-19",
+    "recordings": {
+      "tcformer": {
+        "healthy": 8,
+        "jia": 10
+      },
+      "vitpose": {
+        "cp": 2,
+        "healthy": 9,
+        "jia": 11,
+        "vicon": 12
+      }
+    },
+    "xgb_params": {
+      "max_depth": 4,
+      "n_estimators": 300,
+      "learning_rate": 0.1
+    },
+    "vicon_labelled_stretches_only": true,
+    "angles_despiked": true,
+    "cross_validation": "leave-one-recording-out, 34 ViTPose recordings (22 cohort, 12 Vicon), tolerance 4 frames at 50 fps: 549/551 heel strikes found, 0 false positives, mean error 0.47 frames"
+  }
+}

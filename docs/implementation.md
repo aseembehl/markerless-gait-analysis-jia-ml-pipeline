@@ -37,6 +37,28 @@ stored separately (`bboxes`). Joint angles do not depend on the offset.
 Frames without an accepted person box or without landmarks are dropped, and
 later stages work on the kept frames only.
 
+## Heel-on model
+
+`weights/heel_on_xgb.json` is an XGBoost classifier (depth 4, 300 trees) on
+the six joint angles at 50 Hz and their differences to the angles 1, 2, 4 and
+8 frames before and after (`events.feature_set: context`, see
+`gait/features.py`); its settings file `heel_on_xgb.meta.json` holds the
+feature set, frame rate and post-processing. It was trained on expert-labelled
+heel strikes of 52 recordings: ViTPose landmarks of 22 cohort recordings
+(healthy, JIA, CP) and 12 Vicon-lab recordings, plus the 2023 TCFormer
+landmarks of 18 cohort recordings. Angles were spike-filtered as in the
+pipeline. Vicon recordings were trained only on the stretches where every
+heel strike was labelled.
+
+Leave-one-recording-out cross-validation on the 34 ViTPose recordings
+(each recording held out with its TCFormer copy; a heel strike counts as found
+within +-4 frames at 50 fps): 549 of 551 heel strikes found, no false
+positives, mean timing error 0.47 frames (cohort 270/272, Vicon 279/279). The
+notebook's model and post-processing (raw angles, XGBoost defaults, no
+pass-edge rule) found 521/551 in the same test.
+
+The model files contain no landmarks, angles or recording IDs.
+
 ## Known quirks kept for reproducibility
 
 - Left-to-right ankle angle: the ankle point is shifted 1 px down
@@ -107,9 +129,9 @@ Smaller differences:
 uv venv -p 3.9 .venv
 uv pip install -p .venv -e '.[dev,video,models]'
 
-# Heel-on model: a trained XGBoost model file (JSON) at weights/heel_on_xgb.json
-# (path set by `events.model` in the config). This repo contains inference only;
-# the model is evaluated with numpy, so XGBoost itself is not installed.
+# Heel-on model: weights/heel_on_xgb.json (included; path set by `events.model`
+# in the config). The model is evaluated with numpy, so XGBoost itself is not
+# installed.
 
 # Video -> output folder with landmarks.csv, angles.csv, cycles.npz, plots/ and
 # quality.txt/.json (usable frames, walking passes, dropped cycles, warnings)
