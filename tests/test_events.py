@@ -47,13 +47,15 @@ def test_detector_loads_model_and_predicts():
     assert ev.heel_on_ltr.ndim == 1 and ev.heel_on_rtl.ndim == 1
 
 
-@pytest.mark.parametrize("n_feat", [6, 18])
-def test_numpy_tree_model_matches_xgboost(n_feat):
+# XGBoost 2.1.4 (6 and 18 features), 3.1.3 and 3.2.0: the per-class intercept
+# (base_score) is stored differently in each.
+@pytest.mark.parametrize("name", ["6f", "18f", "v31", "v32"])
+def test_numpy_tree_model_matches_xgboost(name):
     """Expected probabilities were produced by xgboost.XGBClassifier.predict_proba."""
     from jia_gait.gait.xgb_trees import XGBTreeModel
 
-    ref = np.load(DATA / f"tiny_xgb_{n_feat}f_expected.npz")
-    proba = XGBTreeModel(DATA / f"tiny_xgb_{n_feat}f.json").predict_proba(ref["X"])
+    ref = np.load(DATA / f"tiny_xgb_{name}_expected.npz")
+    proba = XGBTreeModel(DATA / f"tiny_xgb_{name}.json").predict_proba(ref["X"])
     np.testing.assert_allclose(proba, ref["proba"], atol=1e-6)
 
 

@@ -31,11 +31,12 @@ class _Tree:
 def _parse_base_score(raw: str, num_class: int) -> np.ndarray:
     raw = raw.strip()
     if raw.startswith("["):
-        vals = np.array(json.loads(raw), dtype=np.float64)
-        # XGBoost >= 3 stores per-class intercepts as probabilities; softprob
-        # turns them into margins with log().
-        return np.log(np.clip(vals, 1e-300, None))
-    # Scalar base_score adds the same margin to every class: no effect on softmax.
+        # XGBoost >= 3.1 stores one intercept per class (3.1: class proportions,
+        # 3.2: their logs). Both are added to the margins unchanged - checked
+        # against predict_proba of XGBoost 3.1.3 and 3.2.0 (tests/data).
+        return np.array(json.loads(raw), dtype=np.float64)
+    # Scalar base_score (XGBoost <= 3.0) adds the same margin to every class:
+    # no effect on softmax.
     return np.full(num_class, float(raw))
 
 

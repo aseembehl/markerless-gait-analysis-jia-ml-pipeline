@@ -7,7 +7,7 @@ name = "jia-gait"
 version = "0.1.0"
 description = "Markerless sagittal-plane gait analysis pipeline for children and adolescents with JIA"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.22",
     "scipy>=1.8",
@@ -43,7 +43,7 @@ testpaths = ["tests"]
 [tool.ruff]
 extend-exclude = ["src/jia_gait/landmarks/vitpose_model"]  # vendored third-party code
 line-length = 100
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint.per-file-ignores]
 # Verbatim copy of the original research code, kept unmodified on purpose.

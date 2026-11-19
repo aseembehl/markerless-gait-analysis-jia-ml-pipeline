@@ -22,6 +22,7 @@ cycles the "Angle 1" (left-side) series.
 
 from __future__ import annotations
 
+import itertools
 import warnings
 from dataclasses import dataclass, field
 
@@ -93,7 +94,7 @@ def cycle_bounds(events: GaitEvents) -> dict[str, list[tuple[int, int]]]:
         )
     merged = sorted([(int(f), "ltr") for f in ltr] + [(int(f), "rtl") for f in rtl])
     out: dict[str, list[tuple[int, int]]] = {d: [] for d in DIRECTIONS}
-    for (a, da), (b, db) in zip(merged[:-1], merged[1:]):
+    for (a, da), (b, db) in itertools.pairwise(merged):
         if da == db:
             out[da].append((a, b))
     return out

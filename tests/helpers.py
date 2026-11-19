@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import itertools
+
 import numpy as np
 
 from jia_gait.io.csv_formats import GaitEvents
@@ -38,7 +40,7 @@ def angles_with_events(events: GaitEvents, n, seed=0, noise=1.0):
     feats = rng.normal(0, noise, size=(n, 6))
     for col_offset, hs in ((0, events.heel_on_ltr), (1, events.heel_on_rtl)):
         hs = np.asarray(hs)
-        for a, b in zip(hs[:-1], hs[1:]):
+        for a, b in itertools.pairwise(hs):
             phase = np.linspace(0, 2 * np.pi, b - a, endpoint=False)
             feats[a:b, 0 + col_offset] += 10 + 22 * np.cos(phase)  # hip
             feats[a:b, 2 + col_offset] += 30 - 28 * np.cos(phase + 0.9)  # knee
