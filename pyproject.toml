@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,6 +7,8 @@ name = "jia-gait"
 version = "0.1.0"
 description = "Markerless sagittal-plane gait analysis pipeline for children and adolescents with JIA"
 readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "src/jia_gait/landmarks/vitpose_model/LICENSE", "src/jia_gait/landmarks/vitpose_model/NOTICE"]
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.22",

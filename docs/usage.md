@@ -122,7 +122,8 @@ it is much faster.
 
 ## Licences
 
-The code depends only on permissively licensed packages. The ViTPose model
+This project is licensed under the Apache License 2.0 (see `LICENSE`). It
+depends only on permissively licensed packages. The ViTPose model
 code in `src/jia_gait/landmarks/vitpose_model/` is adapted from
 [easy_ViTPose](https://github.com/JunkyByte/easy_ViTPose) (Apache-2.0, see its
 `LICENSE` and `NOTICE`).
