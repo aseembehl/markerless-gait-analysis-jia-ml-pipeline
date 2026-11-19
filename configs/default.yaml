@@ -1,0 +1,50 @@
+# Default pipeline configuration (cohort videos). Override with -c path/to/your.yaml.
+# Values follow the original notebooks: vicon_crop, vicon_yolo_pose (without YOLO),
+# heal_on_event_prediction and plots_v7.
+
+# Stage 1: torchvision Faster R-CNN (COCO) person box -> crop.
+detection:
+  score_threshold: 0.8        # person score must exceed this
+  edge_fraction: 0.1666667    # left/right margin = 1/6 of the frame width
+  edge_rule: overlaps         # box reaching into the margin counts as "at the edge"
+  max_edge_frames: 4          # edge boxes accepted only this many frames after a central box
+  min_height: 200             # px; shorter central boxes are skipped
+  device: auto                # cuda if available, else cpu (Apple MPS is very slow for this model)
+
+# Stage 2: ViTPose-H wholebody on the crop (no YOLO re-detection; see landmarks/vitpose.py).
+landmarks:
+  model_size: h
+  dataset: wholebody
+  model_path: null            # local .pth (relative to this file); downloaded from the JunkyByte/easy_ViTPose HF repo if null
+  device: auto                # cuda, else mps (Apple GPU, ~3.7x faster than cpu), else cpu
+
+# JPEG round-trips of the original file-based workflow (null to disable).
+images:
+  frame_jpeg_quality: 95      # frames extracted with cv2.imwrite
+  crop_jpeg_quality: 75       # crops saved with PIL
+
+# Frames dropped in stages 1-2: short gaps are interpolated, long gaps split passes.
+sequence:
+  max_gap_s: 0.1              # seconds
+  default_fps: 50             # frame rate assumed for landmark CSV input without --fps
+
+# Heel-on detection: XGBoost frame classifier on the 6 joint angles.
+events:
+  model: ../weights/heel_on_xgb.json  # relative to this file; its heel_on_xgb.meta.json
+                                   # (features, frame rate, post-processing) overrides the values below
+  model_fps: 50               # the model's frame rate; input angles are resampled to it
+  threshold: 0.5
+  smooth_window: 5
+  min_run: 4
+  outlier_sd: 2.0
+
+# Cycle normalisation.
+cycles:
+  n_points: 101
+  smoothing: lowess           # or null for raw interpolated cycles
+  lowess_frac: 0.08
+  lowess_it: 1
+  wrap_frac: 0.04
+  max_duration_ratio: 1.5     # drop cycles longer than 1.5 x the median (missed heel strike)
+  min_duration_s: 0.4         # plausible stride duration range in seconds
+  max_duration_s: 3.0

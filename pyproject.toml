@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jia-gait"
+version = "0.1.0"
+description = "Markerless sagittal-plane gait analysis pipeline for children and adolescents with JIA"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.22",
+    "scipy>=1.8",
+    "pyyaml>=6.0",
+    "statsmodels>=0.13",
+    "matplotlib>=3.5",
+]
+
+[project.optional-dependencies]
+# Video decoding and model inference. Kept optional so the kinematics and
+# gait-cycle stages can be used (and tested) without a GPU stack.
+video = ["opencv-python>=4.6"]
+# Stages 1-2: torchvision Faster R-CNN + ViTPose-H (model code vendored, weights from the HF hub).
+models = [
+    "torch>=1.13",
+    "torchvision>=0.14",
+    "pillow>=9",
+    "huggingface_hub>=0.16",
+    "opencv-python>=4.6",
+]
+# pandas is only used by the tests' verbatim reference copy of the original code.
+dev = ["pytest>=7", "ruff>=0.4", "pandas>=1.4", "pillow>=9"]
+
+[project.scripts]
+jia-gait = "jia_gait.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+extend-exclude = ["src/jia_gait/landmarks/vitpose_model"]  # vendored third-party code
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint.per-file-ignores]
+# Verbatim copy of the original research code, kept unmodified on purpose.
+"tests/legacy_reference.py" = ["ALL"]

@@ -1,0 +1,11 @@
+This folder contains code copied from easy_ViTPose
+(https://github.com/JunkyByte/easy_ViTPose, version 1.1), licensed under the
+Apache License 2.0 (see LICENSE). easy_ViTPose is itself based on ViTPose
+(https://github.com/ViTAE-Transformer/ViTPose) and MMPose
+(https://github.com/open-mmlab/mmpose), both Apache License 2.0.
+
+Only the parts needed to run a ViTPose model on an image crop are included:
+the ViT backbone, the top-down heatmap head, heatmap decoding and the model
+configurations. Changes are limited to import paths, a reduced copy of
+vit_utils/util.py (_util.py) and config.py. The YOLOv8 person detector used
+by easy_ViTPose (ultralytics, AGPL-3.0) is not used or included.
