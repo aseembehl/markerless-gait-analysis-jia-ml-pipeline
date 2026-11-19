@@ -146,6 +146,7 @@ def test_vendored_model_builds_without_ultralytics():
 
 
 def test_resolve_device_explicit_and_auto():
+    pytest.importorskip("torch")
     from jia_gait.device import resolve_device
 
     assert resolve_device("cpu", allow_mps=True) == "cpu"
