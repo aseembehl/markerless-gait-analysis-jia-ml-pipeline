@@ -8,6 +8,13 @@ from typing import Any
 
 import yaml
 
+# Heel-strike model shipped with the repository (used when no other is configured).
+BUNDLED_MODEL = Path(__file__).resolve().parents[2] / "weights" / "heel_on_xgb.json"
+
+
+def _bundled_model() -> str | None:
+    return str(BUNDLED_MODEL) if BUNDLED_MODEL.exists() else None
+
 
 @dataclass
 class DetectionConfig:
@@ -64,10 +71,11 @@ class AngleConfig:
 
 @dataclass
 class EventConfig:
-    # Path to a trained XGBoost model (.json). Its settings file <model>.meta.json
-    # (feature set, frame rate, post-processing) takes precedence over the
-    # values below, which are only used for models without one.
-    model: str | None = None
+    # Path to a trained XGBoost model (.json); default: the bundled
+    # weights/heel_on_xgb.json. Its settings file <model>.meta.json (feature set,
+    # frame rate, post-processing) takes precedence over the values below, which
+    # are only used for models without one.
+    model: str | None = field(default_factory=_bundled_model)
     model_fps: float = 50.0
     threshold: float = 0.5
     smooth_window: int = 5

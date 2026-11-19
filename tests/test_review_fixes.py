@@ -67,8 +67,10 @@ def test_outlier_check_does_not_measure_intervals_across_a_gap():
 def test_cli_without_model_fails_early_with_message(tmp_path):
     pts = tmp_path / "p.csv"
     write_point_predictions(pts, np.arange(5), np.zeros((5, 12, 2)))
+    no_model = tmp_path / "no_model.yaml"
+    no_model.write_text("events:\n  model: null\n")
     with pytest.raises(SystemExit, match="no heel-strike model configured"):
-        cli.main(["analyse", str(pts), "-o", str(tmp_path / "o")])
+        cli.main(["-c", str(no_model), "analyse", str(pts), "-o", str(tmp_path / "o")])
     with pytest.raises(SystemExit, match="model not found"):
         cli.main(
             ["analyse", str(pts), "-o", str(tmp_path / "o"), "--model", str(tmp_path / "x.json")]
@@ -120,3 +122,11 @@ def test_rerun_removes_stale_plots(tmp_path):
     res = pipeline.analyse_landmarks(lm, cfg, fps=50, event_frames=GaitEvents())
     pipeline.write_outputs(res, tmp_path / "o")
     assert list((tmp_path / "o" / "plots").glob("*.png")) == []
+
+
+def test_bundled_model_is_used_without_a_config():
+    from jia_gait.config import BUNDLED_MODEL
+
+    assert BUNDLED_MODEL.exists()
+    assert PipelineConfig().events.model == str(BUNDLED_MODEL)
+    assert pipeline.event_detector_from_config(PipelineConfig()).settings.feature_set == "context"

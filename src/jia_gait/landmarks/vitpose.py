@@ -4,8 +4,7 @@ ViTPose runs directly on the Faster R-CNN crop, padded to the model's 3:4
 aspect ratio. The original notebook (``vicon_yolo_pose.ipynb``, via
 ``easy_ViTPose``) first re-detected the person inside the crop with YOLOv8;
 that step is redundant here and was removed to avoid the AGPL-licensed
-ultralytics dependency. On K002 the landmarks differ by a median of 1 px and
-the joint angles by a median of 0.4-1.4 deg.
+ultralytics dependency; landmarks differ by about 1 px.
 
 The model code (``vitpose_model/``) is a minimal copy of easy_ViTPose's
 inference code (Apache-2.0); the pretrained weights are downloaded from the

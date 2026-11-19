@@ -198,7 +198,7 @@ class ModelSettings:
     context_offsets: list[int] | None = None
     model_fps: float = 50.0
     postprocess: PostprocessConfig = field(default_factory=PostprocessConfig)
-    info: dict = field(default_factory=dict)  # free-form provenance (training data, CV scores)
+    info: dict = field(default_factory=dict)  # free-form notes
 
     @staticmethod
     def path_for(model_path: str | Path) -> Path:

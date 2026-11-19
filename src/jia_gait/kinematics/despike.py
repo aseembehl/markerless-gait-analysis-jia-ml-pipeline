@@ -10,12 +10,8 @@ its neighbourhood by more than ``threshold_deg`` *and* by more than
 ``n_sigma`` robust standard deviations (1.4826 x the running median absolute
 deviation); it is replaced by the running median.
 
-The 20 deg default was chosen on 90 cohort recordings: it repairs as many
-glitched cycles as 10 deg (19 -> 2 cycles with impossible angles) while
-leaving genuine fast movement alone - with 10 deg, sharp ankle peaks after
-toe-off were sometimes clipped by a few degrees. With 20 deg the range of
-motion of the mean curves of glitch-free recordings is unchanged (ankle: at
-most -1.2 deg in the 1st percentile, hip and knee: 0).
+The 20 deg default removes such glitches while leaving genuine fast
+movement alone; a lower threshold can clip sharp ankle peaks after toe-off.
 
 This step is not part of the original notebooks.
 """
