@@ -6,7 +6,7 @@ from jia_gait.config import DetectionConfig, PipelineConfig
 from jia_gait.detection import BBox, EdgeFilter, PersonDetector, best_person
 from jia_gait.landmarks import LANDMARKS, LandmarkDetector, select_landmarks
 
-from .legacy_reference import legacy_crop_decisions, legacy_select_row
+from .helpers import reference_outputs
 
 W, H = 1920, 1080
 
@@ -29,17 +29,17 @@ def _random_track(n, seed):
 
 
 @pytest.mark.parametrize("seed", range(6))
-@pytest.mark.parametrize("cohort", [True, False])
-def test_edge_filter_matches_original(seed, cohort):
+@pytest.mark.parametrize("overlaps", [True, False])
+def test_edge_filter_matches_reference(seed, overlaps):
     boxes = _random_track(400, seed)
     cfg = (
         DetectionConfig(edge_rule="overlaps", min_height=200)
-        if cohort
+        if overlaps
         else DetectionConfig(edge_rule="inside", min_height=500)
     )
     f = EdgeFilter(cfg)
     kept = [i for i, b in enumerate(boxes) if f(None if b is None else BBox(*b), W) is not None]
-    assert kept == legacy_crop_decisions(boxes, W, cohort=cohort)
+    assert kept == reference_outputs()[f"crop_{seed}_{int(overlaps)}"].tolist()
 
 
 def test_edge_boxes_only_follow_a_central_box():
@@ -59,10 +59,10 @@ def test_best_person_picks_highest_scoring_person():
     assert best_person(boxes, labels, scores, 0.96) is None
 
 
-def test_select_landmarks_matches_original_csv_row():
+def test_select_landmarks_matches_reference_csv_row():
     rng = np.random.default_rng(0)
     kpts = rng.uniform(0, 500, size=(133, 3))  # easy_ViTPose returns (y, x, score)
-    row = np.asarray(legacy_select_row(kpts))
+    row = reference_outputs()["select_row"]
     sel = select_landmarks(kpts)
     assert sel.shape == (len(LANDMARKS), 3)
     np.testing.assert_array_equal(sel[:, :2].reshape(-1), row)

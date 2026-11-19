@@ -1,7 +1,6 @@
 """Stage 4a: heel-on event detection with an XGBoost frame classifier.
 
-Port of ``heal_on_event_prediction.ipynb``. Each frame is classified from its
-six joint angles (``JointAngles.features()``) into
+Each frame is classified from the joint angles (``JointAngles.features()``) into
 
     0 = heel-on, walking left to right
     1 = heel-on, walking right to left
@@ -10,10 +9,9 @@ six joint angles (``JointAngles.features()``) into
 and the per-frame predictions are turned into discrete events by
 majority smoothing, taking the midpoint of each run, and discarding events
 whose spacing is far from the median cycle length. Heel strikes cut off by
-the start or end of a walking pass are recovered separately (``edge_min_run``,
-not in the original notebook).
+the start or end of a walking pass are recovered separately (``edge_min_run``).
 
-Toe-off events are not predicted (only expert-labelled toe-offs exist).
+Toe-off events are not predicted.
 
 The model file is an XGBoost JSON model; it is evaluated with numpy
 (``xgb_trees.py``), so XGBoost itself is not needed at inference time.
@@ -42,7 +40,7 @@ class PostprocessConfig:
     outlier_sd: float = 2.0
     # Heel strikes at the very start or end of a walking pass (tracking starts or
     # stops mid-run): accept a cut-off run of at least this many frames above the
-    # threshold. 0 disables (original notebook behaviour).
+    # threshold. 0 disables.
     edge_min_run: int = 2
 
 
@@ -57,8 +55,8 @@ def _mode_smooth(y: np.ndarray, window: int) -> np.ndarray:
 def _run_midpoints(y: np.ndarray, cls: int, min_run: int) -> list[int]:
     """Midpoints of runs of ``cls`` with length >= ``min_run``.
 
-    As in the original, a run only counts if it ends (the first index of a
-    different class) at or before index ``n - 2``.
+    A run only counts if it ends (the first index of a different class) at or
+    before index ``n - 2``; runs cut off by the end are handled by ``_edge_events``.
     """
     n = len(y)
     mids, i = [], 0
@@ -118,7 +116,7 @@ def _edge_events(
 
 
 def _paired_intervals(peaks: np.ndarray, cls: int) -> list[tuple[int, int]]:
-    """Intervals between same-class events, exactly as the original loop.
+    """Intervals between same-class events.
 
     An interval is only formed when no other-class event lies between the two
     events, and the second event of a pair is not reused as the start of the
@@ -146,11 +144,9 @@ def postprocess(
 
     With ``segment`` (walking-pass id per row), smoothing, run detection and the
     interval-based outlier check never cross a pass boundary; the median
-    interval is still taken over the whole recording. Without it (one pass),
-    the result is identical to the original notebook if ``cfg.edge_min_run``
-    is 0.
+    interval is still taken over the whole recording.
 
-    Note (original behaviour, kept for reproducibility): a frame where no class
+    Note: a frame where no class
     exceeds ``threshold`` becomes class 0 (heel-on L->R) before smoothing,
     because ``argmax`` of an all-zero row is 0.
     """

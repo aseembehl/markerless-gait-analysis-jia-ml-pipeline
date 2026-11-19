@@ -28,8 +28,7 @@ models = [
     "huggingface_hub>=0.16",
     "opencv-python>=4.6",
 ]
-# pandas is only used by the tests' verbatim reference copy of the original code.
-dev = ["pytest>=7", "ruff>=0.4", "pandas>=1.4", "pillow>=9"]
+dev = ["pytest>=7", "ruff>=0.4", "pillow>=9"]
 
 [project.scripts]
 jia-gait = "jia_gait.cli:main"
@@ -44,7 +43,3 @@ testpaths = ["tests"]
 extend-exclude = ["src/jia_gait/landmarks/vitpose_model"]  # vendored third-party code
 line-length = 100
 target-version = "py310"
-
-[tool.ruff.lint.per-file-ignores]
-# Verbatim copy of the original research code, kept unmodified on purpose.
-"tests/legacy_reference.py" = ["ALL"]

@@ -1,7 +1,6 @@
 """Gait-cycle plots: mean +- SD across cycles per joint and walking direction.
 
-Port of the aggregate plot in ``plots_v7.ipynb`` (``plot_fun(mode="agg")``):
-cycles (already interpolated and LOWESS-smoothed, see ``gait.cycles``) are
+Cycles (already interpolated and LOWESS-smoothed, see ``gait.cycles``) are
 averaged; mean and SD (ddof=1) are smoothed for display with a Savitzky-Golay
 filter (window 11, order 3, ``mode="interp"``) and drawn as a line with a
 +-1 SD band.
@@ -26,7 +25,7 @@ DIRECTION_LABELS = {"ltr": "left to right", "rtl": "right to left"}
 
 @dataclass
 class PlotConfig:
-    # y-axis limits per joint (from plots_v7); None -> automatic
+    # y-axis limits per joint; None -> automatic
     axis_range: dict = field(
         default_factory=lambda: {"hip": (-40, 60), "knee": (-20, 80), "ankle": (-70, 30)}
     )
@@ -40,7 +39,7 @@ class PlotConfig:
 
 
 def mean_sd_display(Y: np.ndarray, cfg: PlotConfig) -> tuple[np.ndarray, np.ndarray]:
-    """Mean and SD across cycles (rows), smoothed for display as in plots_v7."""
+    """Mean and SD across cycles (rows), smoothed for display."""
     from scipy.signal import savgol_filter
 
     mu = np.nanmean(Y, axis=0)

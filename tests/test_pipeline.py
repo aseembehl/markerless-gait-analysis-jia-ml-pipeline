@@ -30,7 +30,7 @@ def _write_trial(tmp_path, n=500):
     write_point_predictions(points, imgids, random_landmarks(n))
     ev = periodic_events(n=n, period=40)
     events = tmp_path / "K999_events.csv"
-    # original layout: <unused>, toe-off L->R, heel-on L->R, toe-off R->L, heel-on R->L (image ids)
+    # layout: <unused>, toe-off L->R, heel-on L->R, toe-off R->L, heel-on R->L (image ids)
     cols = [ev.toe_off_ltr, ev.heel_on_ltr, ev.toe_off_rtl, ev.heel_on_rtl]
     with open(events, "w") as fh:
         fh.writelines(

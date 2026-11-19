@@ -1,16 +1,13 @@
 """Stage 2: ViTPose-H (COCO-WholeBody) landmarks on the person crop.
 
 ViTPose runs directly on the Faster R-CNN crop, padded to the model's 3:4
-aspect ratio. The original notebook (``vicon_yolo_pose.ipynb``, via
-``easy_ViTPose``) first re-detected the person inside the crop with YOLOv8;
-that step is redundant here and was removed to avoid the AGPL-licensed
-ultralytics dependency; landmarks differ by about 1 px.
+aspect ratio.
 
 The model code (``vitpose_model/``) is a minimal copy of easy_ViTPose's
 inference code (Apache-2.0); the pretrained weights are downloaded from the
 ``JunkyByte/easy_ViTPose`` Hugging Face repository unless a local file is set.
 
-Landmark selection from the 133 COCO-WholeBody keypoints, as in the original:
+Landmark selection from the 133 COCO-WholeBody keypoints:
 keypoints 5..22, drop elbows and wrists, then ``np.delete([-3, -6])``. That
 removes the *big* toes, so "toe" is the **small toe**:
 

@@ -1,7 +1,7 @@
 """Anatomical landmark definition.
 
-Twelve landmarks (six per body side), in the column order of the original
-``point_predictions/<ID>.csv`` files::
+Twelve landmarks (six per body side), in the column order of the landmark
+CSV files::
 
     imgids, shoulder left_x, shoulder left_y, shoulder right_x, ..., heel right_y
 

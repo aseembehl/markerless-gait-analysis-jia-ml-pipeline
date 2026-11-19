@@ -12,8 +12,6 @@ deviation); it is replaced by the running median.
 
 The 20 deg default removes such glitches while leaving genuine fast
 movement alone; a lower threshold can clip sharp ankle peaks after toe-off.
-
-This step is not part of the original notebooks.
 """
 
 from __future__ import annotations

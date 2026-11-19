@@ -18,13 +18,13 @@ def _bundled_model() -> str | None:
 
 @dataclass
 class DetectionConfig:
-    """Faster R-CNN person crop (vicon_crop.ipynb)."""
+    """Faster R-CNN person crop."""
 
     score_threshold: float = 0.8
     edge_fraction: float = 1 / 6
-    edge_rule: str = "overlaps"  # cohort videos; "inside" for Vicon recordings
+    edge_rule: str = "overlaps"  # or "inside" (stricter, for tightly framed videos)
     max_edge_frames: int = 4
-    min_height: float = 200  # px; 500 for Vicon recordings
+    min_height: float = 200  # px
     device: str = "auto"  # auto = cuda if available, else cpu (MPS is very slow for this model)
 
 
@@ -40,11 +40,8 @@ class LandmarkConfig:
 
 @dataclass
 class ImageConfig:
-    """JPEG round-trips that the original file-based workflow applied.
-
-    Frames were written with ``cv2.imwrite`` (quality 95) and crops with
-    ``PIL.Image.save`` (quality 75) before the next model read them. Set to
-    null to skip a round-trip.
+    """JPEG compression applied to frames (quality 95) and person crops
+    (quality 75) before landmark detection. Set to null to skip it.
     """
 
     frame_jpeg_quality: int | None = 95

@@ -1,7 +1,7 @@
-"""Readers/writers for the CSV formats used by the original research code.
+"""Readers/writers for the landmark, event and angle CSV formats.
 
 * ``point_predictions/<ID>.csv`` - per-frame landmarks (header, 1 + 24 columns)
-* ``heel_on_events*/<ID>.csv`` - expert gait events, no header, one event per
+* ``heel_on_events*/<ID>.csv`` - labelled gait events, no header, one event per
   cell, values are image ids:
   ``<unused>, toe-off L->R, heel-on L->R, toe-off R->L, heel-on R->L``
 * ``angle_preds*/<ID>.csv`` - per-frame angles plus event flags (``100`` or

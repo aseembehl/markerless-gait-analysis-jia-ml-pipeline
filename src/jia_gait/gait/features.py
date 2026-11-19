@@ -1,6 +1,6 @@
 """Feature sets for the heel-on classifier (computed at the model frame rate).
 
-``angles``  - the 6 per-frame joint angles (original notebook).
+``angles``  - the 6 per-frame joint angles.
 ``context`` - the 6 angles plus their change to neighbouring frames at the
               given offsets, giving the classifier temporal context. Offsets
               are clipped at walking-pass (segment) boundaries.

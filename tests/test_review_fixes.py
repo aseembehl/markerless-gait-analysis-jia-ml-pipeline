@@ -40,8 +40,8 @@ def test_no_event_invented_from_runs_on_both_sides_of_a_gap():
     seq = _seq(np.r_[np.arange(0, 50), np.arange(200, 250)])
     # last 3 rows of pass 0 and first 3 rows of pass 1: neither is a run of 4 on its own
     hits = [47, 48, 49, 50, 51, 52]
-    notebook = ModelSettings(model_fps=50, postprocess=PostprocessConfig(edge_min_run=0))
-    ev = EventDetector(_RowModel(hits), notebook).detect(np.zeros((len(seq), 6)), seq, fps=50)
+    no_edge = ModelSettings(model_fps=50, postprocess=PostprocessConfig(edge_min_run=0))
+    ev = EventDetector(_RowModel(hits), no_edge).detect(np.zeros((len(seq), 6)), seq, fps=50)
     assert len(ev.heel_on_ltr) == 0
     # the edge rule treats them as two cut-off runs, one strike per pass, none in the gap
     ev = EventDetector(_RowModel(hits), ModelSettings(model_fps=50)).detect(

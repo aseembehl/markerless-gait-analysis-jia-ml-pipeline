@@ -61,7 +61,7 @@ def detect_landmarks(
     """Stages 1-2 over an iterable of RGB frames.
 
     Frames without an accepted person box or without landmarks are dropped
-    (not kept as NaN rows), as in the original; later stages work on the kept
+    (not kept as NaN rows); later stages work on the kept
     rows only. Returns ``(imgids, landmarks (T, 12, 3), bboxes (T, 4))``.
     """
     img_cfg = (cfg or PipelineConfig()).images

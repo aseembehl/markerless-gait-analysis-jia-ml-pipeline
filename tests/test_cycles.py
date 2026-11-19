@@ -1,27 +1,13 @@
 import numpy as np
-import pandas as pd
 import pytest
 
 from jia_gait.gait import CycleConfig, cycle_bounds, extract_gait_cycles
-from jia_gait.io.csv_formats import FEATURE_COLUMNS, GaitEvents
+from jia_gait.io.csv_formats import GaitEvents
 from jia_gait.kinematics import JointAngles
 
-from .helpers import angles_with_events, periodic_events
-from .legacy_reference import legacy_cycle_to_grid, legacy_lowess_wrap, legacy_preprocess
+from .helpers import angles_with_events, periodic_events, reference_outputs
 
-
-def _legacy_df(feats, ev):
-    df = pd.DataFrame(feats, columns=list(FEATURE_COLUMNS))
-    for col, frames in (
-        ("Toe off left to right", ev.toe_off_ltr),
-        ("Toe off right to left", ev.toe_off_rtl),
-        ("Heel on left to right", ev.heel_on_ltr),
-        ("Heel on right to left", ev.heel_on_rtl),
-    ):
-        df[col] = np.nan
-        df.loc[np.asarray(frames, dtype=int), col] = 100
-    return df
-
+REF = reference_outputs()
 
 EVENT_SETS = [
     periodic_events(n=600, period=40, seed=0),
@@ -31,41 +17,24 @@ EVENT_SETS = [
 ]
 
 
-@pytest.mark.parametrize("ev", EVENT_SETS)
-def test_cycle_bounds_match_original(ev):
-    n = 620
-    feats = angles_with_events(ev, n)
-    pre = legacy_preprocess(_legacy_df(feats, ev))
-    expected = {"ltr": set(), "rtl": set()}
-    for split, g in pre.groupby("f_split"):
-        expected["ltr" if split.startswith("l") else "rtl"].add((g["time"].min(), g["time"].max()))
-    got = cycle_bounds(ev)
-    assert {d: set(v) for d, v in got.items()} == expected
+@pytest.mark.parametrize("k", range(len(EVENT_SETS)))
+def test_cycle_bounds_match_reference(k):
+    got = cycle_bounds(EVENT_SETS[k])
+    for d in ("ltr", "rtl"):
+        assert sorted(got[d]) == [tuple(b) for b in REF[f"bounds_{k}_{d}"].tolist()]
 
 
 @pytest.mark.parametrize("smoothing", [None, "lowess"])
-def test_normalised_cycles_match_original(smoothing):
+def test_normalised_cycles_match_reference(smoothing):
     ev = EVENT_SETS[0]
-    n = 600
-    feats = angles_with_events(ev, n, noise=2.0)
-    pre = legacy_preprocess(_legacy_df(feats, ev))
+    feats = angles_with_events(ev, 600, noise=2.0)
     cycles = extract_gait_cycles(
         JointAngles.from_features(feats), ev, CycleConfig(smoothing=smoothing)
     )
-
-    for d, prefix, col in (("ltr", "l", "Knee Angle 2"), ("rtl", "r", "Knee Angle 1")):
-        dc = cycles[d]
-        splits = sorted(
-            (s for s in pre["f_split"].unique() if s.startswith(prefix)),
-            key=lambda s: pre.loc[pre["f_split"] == s, "time"].min(),
-        )
-        assert len(splits) == dc.n_cycles > 0
-        for k, s in enumerate(splits):
-            g = pre[pre["f_split"] == s]
-            ref = legacy_cycle_to_grid(g["relative_time"].to_numpy(float), g[col].to_numpy(float))
-            if smoothing == "lowess":
-                ref = legacy_lowess_wrap(ref)
-            np.testing.assert_allclose(dc.angles["knee"][k], ref, atol=1e-8)
+    for d in ("ltr", "rtl"):
+        ref = REF[f"knee_{smoothing or 'none'}_{d}"]
+        assert cycles[d].n_cycles == len(ref) > 0
+        np.testing.assert_allclose(cycles[d].angles["knee"], ref, atol=1e-8)
 
 
 def test_toe_off_fraction_and_shapes():

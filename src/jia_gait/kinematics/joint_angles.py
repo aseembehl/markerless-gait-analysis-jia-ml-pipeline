@@ -1,13 +1,13 @@
 """Stage 3: frame-by-frame sagittal joint angles from 2D landmarks.
 
-Port of ``pointsToAngles.ipynb``. Each video contains walks in both
+Each video contains walks in both
 directions, so angles are computed for both body sides on every frame:
 
 * "Angle 1" / right-to-left (``rtl``) uses the LEFT-side landmarks
   (the left side faces the camera when walking right to left);
 * "Angle 2" / left-to-right (``ltr``) uses the RIGHT-side landmarks.
 
-No filtering is applied to landmarks or angles (as in the original code).
+Angles are not filtered here (glitch removal: ``despike.py``).
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ _DOWN = np.array([0.0, 1.0])  # +1 px in image y (pointing down)
 
 
 def angle_between(p1: np.ndarray, p2: np.ndarray, p3: np.ndarray) -> np.ndarray:
-    """Vectorised port of the original ``angle_between(p1, p2, p3)``.
+    """Vectorised ``angle_between(p1, p2, p3)``.
 
     Angle at ``p2`` going from ``p1`` to ``p3`` in [0, 360), with directions
     measured as ``atan2(dx, dy)`` in image coordinates. Inputs are ``(..., 2)``.
@@ -45,7 +45,7 @@ class JointAngles:
     ankle_rtl: np.ndarray
 
     def features(self) -> np.ndarray:
-        """``(T, 6)`` matrix in the original CSV column order (``FEATURE_COLUMNS``)."""
+        """``(T, 6)`` matrix in the CSV column order (``FEATURE_COLUMNS``)."""
         return np.stack(
             [
                 self.hip_ltr,
@@ -92,15 +92,14 @@ def compute_joint_angles(landmarks: np.ndarray) -> JointAngles:
         knee_ang = angle_between(hip, knee, ankle)
         foot = angle_between(heel, toe, toe + _DOWN)
         if direction == "rtl":
-            # Original: ankle uses (knee, ankle, ankle + 1 px down).
+            # Shank direction: from the ankle straight down (1 px).
             shank = angle_between(knee, ankle, ankle + _DOWN)
             out["hip_rtl"] = 180.0 - hip_knee
             out["knee_rtl"] = knee_ang - 180.0
             out["ankle_rtl"] = (foot - 90.0) - (shank - 90.0) - 90.0
         else:
-            # Original has ``ankleVertical = ankle = (x, y + 1)``: the ankle used
-            # for the shank direction is shifted 1 px down. Reproduced verbatim
-            # to keep published numbers; its effect is a fraction of a degree.
+            # The ankle used for the shank direction is shifted 1 px down; the
+            # effect is a fraction of a degree.
             ankle_shifted = ankle + _DOWN
             shank = angle_between(knee, ankle_shifted, ankle_shifted)
             out["hip_ltr"] = hip_knee - 180.0

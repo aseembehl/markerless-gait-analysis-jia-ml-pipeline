@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+from pathlib import Path
 
 import numpy as np
 
@@ -46,3 +47,8 @@ def angles_with_events(events: GaitEvents, n, seed=0, noise=1.0):
             feats[a:b, 2 + col_offset] += 30 - 28 * np.cos(phase + 0.9)  # knee
             feats[a:b, 4 + col_offset] += 8 * np.sin(phase)  # ankle
     return feats
+
+
+def reference_outputs():
+    """Outputs of an independent reference implementation on the tests' seeded inputs."""
+    return np.load(Path(__file__).parent / "data" / "reference_outputs.npz")

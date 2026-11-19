@@ -1,6 +1,6 @@
 """Stage 1: person detection and cropping with torchvision Faster R-CNN.
 
-Port of ``vicon_crop.ipynb``. Per frame:
+Per frame:
 
 1. Run COCO-pretrained ``fasterrcnn_resnet50_fpn`` and keep ``person`` boxes
    with score > ``score_threshold``; take the highest-scoring one.
@@ -9,10 +9,11 @@ Port of ``vicon_crop.ipynb``. Per frame:
    of the frame); otherwise the frame is skipped. This rejects bystanders at the
    edge of the room before the child enters.
 3. Boxes shorter than ``min_height`` px are skipped (edge-accepted boxes bypass
-   this check, as in the original).
+   this check).
 
-Defaults are the cohort settings (``edge_rule="overlaps"``, ``min_height=200``).
-The notebook's Vicon recordings used ``edge_rule="inside"`` and ``min_height=500``.
+Defaults: ``edge_rule="overlaps"``, ``min_height=200``. For tightly framed
+recordings, ``edge_rule="inside"`` with a larger ``min_height`` (e.g. 500) is
+stricter.
 """
 
 from __future__ import annotations
@@ -27,7 +28,7 @@ COCO_PERSON = 1
 
 
 class EdgeFilter:
-    """The stateful accept/skip logic of the original crop loop (model-free, testable)."""
+    """The stateful accept/skip logic of the crop loop (model-free, testable)."""
 
     def __init__(self, cfg: DetectionConfig):
         self.cfg = cfg
@@ -39,9 +40,9 @@ class EdgeFilter:
 
     def _at_edge(self, box: BBox, width: int) -> bool:
         margin = width * self.cfg.edge_fraction
-        if self.cfg.edge_rule == "overlaps":  # cohort: box reaches into the margin
+        if self.cfg.edge_rule == "overlaps":  # box reaches into the margin
             return box.x1 < margin or box.x2 > width - margin
-        if self.cfg.edge_rule == "inside":  # Vicon: box lies entirely within the margin
+        if self.cfg.edge_rule == "inside":  # box lies entirely within the margin
             return box.x2 < margin or box.x1 > width - margin
         raise ValueError(f"Unknown edge_rule {self.cfg.edge_rule!r}")
 
@@ -87,7 +88,7 @@ class FasterRCNNDetector(PersonDetector):
             fasterrcnn_resnet50_fpn,
         )
 
-        # COCO_V1 are the weights the original got with ``pretrained=True``.
+        # COCO_V1: the weights ``pretrained=True`` used to load.
         model = fasterrcnn_resnet50_fpn(weights=FasterRCNN_ResNet50_FPN_Weights.COCO_V1)
         self._torch = torch
         self.device = resolve_device(self.cfg.device, allow_mps=False)

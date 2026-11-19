@@ -1,7 +1,5 @@
 """Stage 4b: assemble joint-angle sequences into normalised gait cycles.
 
-Port of ``preprocess`` / ``plot_fun(mode="agg")`` in ``plots_v7.ipynb``:
-
 1. A cycle runs from one heel-on to the next heel-on *of the same walking
    direction*. Cycles interrupted by an event of the other direction (i.e. the
    last cycle before the child turns) are dropped, as is the open-ended last
@@ -9,9 +7,9 @@ Port of ``preprocess`` / ``plot_fun(mode="agg")`` in ``plots_v7.ipynb``:
 2. Time within a cycle is normalised to 0..1 and linearly interpolated onto a
    grid of ``n_points`` (101 -> 0, 1, ..., 100 % of the cycle).
 3. Optionally each cycle is smoothed with LOWESS using a short wrap-around
-   pad at both ends (latest ``plots_v7`` settings: frac=0.08, it=1, wrap 4 %).
+   pad at both ends (defaults: frac=0.08, it=1, wrap 4 %).
 
-Additions beyond the notebooks (when frame ids / segments are given): cycles
+When frame ids / segments are given, cycles
 that span a segment boundary (a long gap in the video) are dropped, and so are
 cycles longer than ``max_duration_ratio`` times the recording's median cycle
 duration - typically two strides merged because a heel strike was missed.
@@ -84,7 +82,7 @@ class GaitCycles:
 
 
 def cycle_bounds(events: GaitEvents) -> dict[str, list[tuple[int, int]]]:
-    """Heel-on pairs per direction, following the original split/removal rules."""
+    """Heel-on pairs per direction, following the split/removal rules above."""
     ltr = np.asarray(events.heel_on_ltr, dtype=int)
     rtl = np.asarray(events.heel_on_rtl, dtype=int)
     clash = np.intersect1d(ltr, rtl)

@@ -3,14 +3,12 @@ import numpy as np
 from jia_gait.kinematics import compute_joint_angles
 from jia_gait.landmarks import landmark_index
 
-from .helpers import random_landmarks
-from .legacy_reference import legacy_angles
+from .helpers import random_landmarks, reference_outputs
 
 
-def test_matches_original_code_exactly():
+def test_matches_reference_exactly():
     lm = random_landmarks(n=500, seed=1)
-    rows = [[float(i), *frame.reshape(-1).tolist()] for i, frame in enumerate(lm)]
-    expected = legacy_angles(rows)
+    expected = reference_outputs()["angles"]
     np.testing.assert_allclose(compute_joint_angles(lm).features(), expected, atol=1e-9)
 
 
@@ -39,7 +37,7 @@ def test_sign_conventions():
         straight = compute_joint_angles(_pose(side, 0, foot_dir)).direction(direction)
         assert abs(straight["hip"][0]) < 1e-6
         assert abs(straight["knee"][0]) < 1e-6
-        assert abs(straight["ankle"][0]) < 0.5  # ltr carries the original 1 px ankle shift
+        assert abs(straight["ankle"][0]) < 0.5  # ltr carries the 1 px ankle shift
 
         flexed = compute_joint_angles(_pose(side, 40, foot_dir)).direction(direction)
         np.testing.assert_allclose(flexed["knee"][0], 40, atol=0.5)

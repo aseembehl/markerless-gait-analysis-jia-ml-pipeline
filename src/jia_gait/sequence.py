@@ -1,9 +1,8 @@
 """Turn the kept frames of a recording into a gap-aware time series.
 
-Stages 1-2 drop frames without an accepted person box or landmarks. The
-original notebooks then treated the remaining rows as consecutive, which
-compresses time across gaps and loses heel strikes that fall on dropped frames.
-Here instead:
+Stages 1-2 drop frames without an accepted person box or landmarks. Treating
+the remaining rows as consecutive would compress time across gaps and lose
+heel strikes that fall on dropped frames. Instead:
 
 * short gaps (up to ``max_gap`` missing frames) inside a walking pass are filled
   by linear interpolation of the landmarks;

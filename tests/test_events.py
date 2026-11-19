@@ -5,12 +5,12 @@ import numpy as np
 import pytest
 
 from jia_gait.gait import EventDetector, postprocess
+from jia_gait.gait.events import PostprocessConfig
 
 DATA = Path(__file__).parent / "data"
 _PRELOADED = set(sys.modules)
 
-from .helpers import periodic_events
-from .legacy_reference import legacy_postprocess
+from .helpers import periodic_events, reference_outputs
 
 
 def _noisy_proba(events, n, seed):
@@ -29,14 +29,13 @@ def _noisy_proba(events, n, seed):
 
 
 @pytest.mark.parametrize("seed", range(8))
-def test_postprocess_matches_original_code(seed):
+def test_postprocess_matches_reference(seed):
     n = 700
     ev = periodic_events(n=n, period=38, seed=seed)
-    proba = _noisy_proba(ev, n, seed)
-    expected = legacy_postprocess(proba)
-    got = postprocess(proba)
-    np.testing.assert_array_equal(got.heel_on_ltr, np.flatnonzero(expected == 0))
-    np.testing.assert_array_equal(got.heel_on_rtl, np.flatnonzero(expected == 1))
+    got = postprocess(_noisy_proba(ev, n, seed), PostprocessConfig(edge_min_run=0))
+    ref = reference_outputs()
+    np.testing.assert_array_equal(got.heel_on_ltr, ref[f"events_{seed}_ltr"])
+    np.testing.assert_array_equal(got.heel_on_rtl, ref[f"events_{seed}_rtl"])
 
 
 def test_detector_loads_model_and_predicts():
